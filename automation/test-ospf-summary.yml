@@ -1,0 +1,61 @@
+
+- name: Configure Leaf01
+  hosts: leaf01
+  become: yes
+
+  tasks:
+  - name: Deploy Configuration To Leaf01
+    nclu:
+        commit: true
+        description: "Deploy interface configuration"
+        commands:
+            - add bond bond01 bond slaves swp31-32
+            - add bond bond01 bridge trunk vlans 111,222
+            - add vlan 111 vlan-raw-device bridge
+            - add vlan 222 vlan-raw-device bridge
+            - add interface swp1 bridge access 111
+            - add interface swp2 bridge access 222
+            - add loopback lo ip address 172.16.200.1/32
+
+- name: Configure Leaf02
+  hosts: leaf02
+  become: yes
+
+  tasks:
+  - name: Deploy Configuration To Leaf02
+    nclu:
+        commit: true
+        description: "Deploy interface configuration"
+        commands:
+            - add bond bond01 bond slaves swp31-32
+            - add bond bond01 bridge trunk vlans 111,222
+            - add vlan 111 vlan-raw-device bridge
+            - add vlan 222 vlan-raw-device bridge
+            - add interface swp1 bridge access 222
+            - add interface swp2 bridge trunk vlans 111
+            - add loopback lo ip address 172.16.200.2/32
+
+- name: Configure Access01
+  hosts: access01
+  become: yes
+
+  tasks:
+  - name: Deploy Configuration To Access01
+    nclu:
+        commit: true
+        description: "Deploy interface configuration"
+        commands:
+            - add vlan 111 vlan-raw-device bridge
+            - add interface swp1 bridge access 111
+            - add interface swp2 bridge trunk vlans 111
+            - add loopback lo ip address 172.16.200.3/32
+
+- name: Server Configuration
+  hosts: servers
+  become: yes
+  tasks:
+  - name: Copy Interfaces Configuration File
+    copy: src=./{{ ansible_hostname }}.cfg dest=/etc/network/interfaces
+
+  - name: Restart Networking
+    service: name=networking state=restarted
