@@ -2,17 +2,13 @@
 
 ### Summary:
 
-put some stuff here
+This repo is to test how to do OSPF type-5 route summarization on the ASBR
 
 ### Network Diagram:
 
 ![Network Diagram](https://github.com/Cloudofyou/test-ospf-summary/blob/master/documentation/test-ospf-summary.png)
 
 ### Initializing the demo environment:
-
-Ignore everything below here:...
-
-
 
 First, make sure that the following is currently running on your machine:
 
@@ -26,15 +22,15 @@ First, make sure that the following is currently running on your machine:
 
 3. Copy the Git repo to your local machine:
 
-    ```git clone https://github.com/chronot1995/int-ansible-training-clag-nclu```
+    ```git clone https://github.com/Cloudofyou/test-ospf-summary```
 
 4. Change directories to the following
 
-    ```int-ansible-training-clag-nclu```
+    ```test-ospf-summary```
 
 6. Run the following:
 
-    ```./start-vagrant-poc.sh```
+    ```./bringitup.sh```
 
 ### Running the Ansible Playbook
 
@@ -45,125 +41,21 @@ First, make sure that the following is currently running on your machine:
 
 2. Copy the Git repo unto the oob-mgmt-server:
 
-    ```git clone https://github.com/chronot1995/int-ansible-training-clag-nclu```
+    ```git clone https://github.com/Cloudofyou/test-ospf-summary```
 
 3. Change directories to the following
 
-    ```int-ansible-training-clag-nclu/automation```
+    ```test-ospf-summary/automation```
 
 4. Run the following:
 
-    ```./provision.sh```
+    ```./confignet.sh```
 
-This will bring run the automation script and configure the two switches with CLAG.
+This will bring run the automation script and configure the three switches with OSPF.
 
-### Troubleshooting
+Switch <b>r3</b> has 4 static routes representing external networks that need to be injected into OSPF via redistribution. In order to accomplish this, we created another static aggregate route of the 4 downstream networks (in this case, 172.18.0.0/22).
 
-Helpful NCLU troubleshooting commands:
-
-- net show clag
-- net show interface bonds
-- net show interface bondmems
-- net show route
-- net show interface | grep -i UP
-- net show lldp
-
-Helpful Linux troubleshooting commands:
-
-- ip route
-- ip link show
-- ip address <interface>
-- cat /proc/net/bonding/uplink
-
-The CLAG status command will verify the CLAG peer status:
-
-```
-cumulus@switch01:mgmt-vrf:~$ net show clag status
-The peer is alive
-     Our Priority, ID, and Role: 100 44:38:39:00:00:05 primary
-    Peer Priority, ID, and Role: 100 44:38:39:00:00:06 secondary
-          Peer Interface and IP: peerlink.4094 169.254.1.2
-                      Backup IP: 192.168.200.2 vrf mgmt (active)
-                     System MAC: 44:38:39:ff:01:56
-
-CLAG Interfaces
-Our Interface      Peer Interface     CLAG Id   Conflicts              Proto-Down Reason
-----------------   ----------------   -------   --------------------   -----------------
-          bond01   -                  1         -                      -
-```
-
-The most important link is the status of the "Backup IP." In the above, it is set to "active," which means that the two switches will form an LACP connection to the downstream server.
-
-One can see the various LACP interfaces and which bond / LACP member that they belong to:
-
-```
-cumulus@switch01:mgmt-vrf:~$ net show interface bondmems
-    Name    Speed      MTU  Mode     Summary
---  ------  -------  -----  -------  --------------------
-UP  swp1    1G        1500  LACP-UP  Master: bond01(DN)
-UP  swp2    1G        1500  LACP-UP  Master: peerlink(UP)
-UP  swp3    1G        1500  LACP-UP  Master: peerlink(UP)
-```
-
-One can also see the bonds in a more concise output:
-
-```
-cumulus@switch01:mgmt-vrf:~$ net show interface bonds
-    Name      Speed      MTU  Mode    Summary
---  --------  -------  -----  ------  --------------------------------
-DN  bond01    N/A       1500  LACP    Bond Members: swp1(UP)
-UP  peerlink  2G        1500  LACP    Bond Members: swp2(UP), swp3(UP)
-```
-
-There currently is no NCLU command to view the VRR interface. The easiest way is to check the "UP" state on the "-v" interface using Linux's "ip" command:
-
-```
-cumulus@switch01:mgmt-vrf:~$ ip address show | grep vlan100
-40: vlan100@bridge: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
-    inet 172.16.121.2/24 scope global vlan100
-41: vlan100-v0@vlan100: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
-    inet 172.16.121.1/24 scope global vlan100-v0
-```
-
-On the Linux server itself, one can view the status of the LACP bond on the "uplink" interface with the following command:
-
-```
-cumulus@server01:~$ cat /proc/net/bonding/uplink | grep Status
-MII Status: up
-MII Status: up
-MII Status: up
-```
-
-The Linux server will be able to ping the VRR gateway (.1), and each leaf IP (.2, .3):
-
-```
-cumulus@server01:~$ ping 172.16.121.1
-PING 172.16.121.1 (172.16.121.1) 56(84) bytes of data.
-64 bytes from 172.16.121.1: icmp_seq=1 ttl=64 time=2.10 ms
-^C
---- 172.16.121.1 ping statistics ---
-1 packets transmitted, 1 received, 0% packet loss, time 0ms
-rtt min/avg/max/mdev = 2.100/2.100/2.100/0.000 ms
-
-cumulus@server01:~$ ping 172.16.121.2
-PING 172.16.121.2 (172.16.121.2) 56(84) bytes of data.
-64 bytes from 172.16.121.2: icmp_seq=1 ttl=64 time=1.09 ms
-^C
---- 172.16.121.2 ping statistics ---
-1 packets transmitted, 1 received, 0% packet loss, time 0ms
-rtt min/avg/max/mdev = 1.095/1.095/1.095/0.000 ms
-
-cumulus@server01:~$ ping 172.16.121.3
-PING 172.16.121.3 (172.16.121.3) 56(84) bytes of data.
-64 bytes from 172.16.121.3: icmp_seq=1 ttl=64 time=1.02 ms
-64 bytes from 172.16.121.3: icmp_seq=2 ttl=64 time=1.08 ms
-^C
---- 172.16.121.3 ping statistics ---
-2 packets transmitted, 2 received, 0% packet loss, time 1001ms
-rtt min/avg/max/mdev = 1.022/1.055/1.089/0.046 ms
-```
-
-
+We create a route-map to only allow the summary route 172.18.0.0/22 into the OSPF network which shows from <b>r1</b> with a ```net show route```.
 
 ### Errata
 
