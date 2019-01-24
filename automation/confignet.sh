@@ -1,3 +1,3 @@
 #!/bin/bash
 
-ansible-playbook ./training-bridging.yml
+ansible-playbook ./test-ospf-summary.yml
