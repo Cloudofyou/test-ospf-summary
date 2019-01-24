@@ -30,7 +30,7 @@ First, make sure that the following is currently running on your machine:
 
 6. Run the following:
 
-    ```./bringitup.sh```
+    ```./gititup.sh```
 
 ### Running the Ansible Playbook
 
