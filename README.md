@@ -51,7 +51,7 @@ First, make sure that the following is currently running on your machine:
 
     ```./confignet.sh```
 
-This will bring run the automation script and configure the three switches with OSPF.
+This will run the automation script and configure the three switches with OSPF.
 
 Switch <b>r3</b> has 4 static routes representing external networks that need to be injected into OSPF via redistribution. In order to accomplish this, we created another static aggregate route of the 4 downstream networks (in this case, 172.18.0.0/22).
 
