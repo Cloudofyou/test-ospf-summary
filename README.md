@@ -53,7 +53,7 @@ First, make sure that the following is currently running on your machine:
 
 This will run the automation script and configure the three switches with OSPF.
 
-Switch <b>r3</b> has 4 static routes representing external networks that need to be injected into OSPF via redistribution. In order to accomplish this, we created another static aggregate route of the 4 downstream networks (in this case, 172.18.0.0/22).
+Switch <b>r3</b> has 4 static routes representing external networks that need to be injected into OSPF via redistribution. Instead of seeing each of the individual routes injected, we want to summarize as best we can. In this case, it's an easy aggregation prefix but in order to accomplish this, we need to create another static aggregate route of the 4 downstream networks (in this case, 172.18.0.0/22).
 
 We create a route-map to only allow the summary route 172.18.0.0/22 into the OSPF network which shows from <b>r1</b> with a ```net show route```.
 
